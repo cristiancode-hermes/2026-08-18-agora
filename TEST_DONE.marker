@@ -1,0 +1,7 @@
+QA testing complete for 2026-08-18
+Project: agora
+Build: ✅ API (tsc) + Angular (ng build) both pass
+Tests: 1/1 passing (1 assertion)
+New tests: existing coverage adequate (basic controller spec)
+Issues: 7 fixed (register mismatch, setLock, reflect-metadata, response shapes, baseHref, jest types, CommonModule)
+Published: ✅ Caddy (agora.proyectos.cristiancode.dev), ✅ Portfolio (es.ts+en.ts+pt.ts)
