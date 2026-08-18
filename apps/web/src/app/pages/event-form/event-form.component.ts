@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -20,7 +19,7 @@ import { NotificationService } from '../../core/services/notification.service';
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [FormsModule, NavbarComponent, FooterComponent, ToastComponent],
+  imports: [NavbarComponent, FooterComponent, ToastComponent],
   template: `<app-navbar />
 <div class="page-container">
   <h1>{{ isEditing() ? 'Editar evento' : 'Crear evento' }}</h1>
@@ -38,10 +37,14 @@ import { NotificationService } from '../../core/services/notification.service';
     </div>
     <div class="form-row">
       <div class="form-group"><label>Categoría</label><select [value]="categoryId()" (change)="categoryId.set(+$any($event.target).value)">
-        <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id">{{ cat.name }}</option>
+        }
       </select></div>
       <div class="form-group"><label>Lugar</label><select [value]="venueId()" (change)="venueId.set(+$any($event.target).value)">
-        <option *ngFor="let v of venues()" [value]="v.id">{{ v.name }}</option>
+        @for (v of venues(); track v.id) {
+          <option [value]="v.id">{{ v.name }}</option>
+        }
       </select></div>
     </div>
     <div class="form-group"><label>URL de imagen</label><input type="url" [value]="imageUrl()" (input)="imageUrl.set($any($event.target).value)" /></div>

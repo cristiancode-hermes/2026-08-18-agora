@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -27,16 +26,22 @@ import { NotificationService } from '../../core/services/notification.service';
   <table>
     <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Plazas</th><th>Acciones</th></tr></thead>
     <tbody>
-      <tr *ngFor="let ev of events()">
+      @for (ev of events(); track ev.id) {
+      <tr>
         <td>{{ ev.title }}</td>
         <td>{{ ev.date }}</td>
         <td><app-status-badge [status]="ev.status" /></td>
         <td>{{ ev.spotsTaken }}/{{ ev.capacity }}</td>
         <td>
-          <button class="btn-sm" (click)="toggleStatus(ev)" *ngIf="ev.status === 'published'">Cancelar</button>
-          <button class="btn-sm" (click)="toggleStatus(ev)" *ngIf="ev.status === 'cancelled'">Publicar</button>
+          @if (ev.status === 'published') {
+            <button class="btn-sm" (click)="toggleStatus(ev)">Cancelar</button>
+          }
+          @if (ev.status === 'cancelled') {
+            <button class="btn-sm" (click)="toggleStatus(ev)">Publicar</button>
+          }
         </td>
       </tr>
+      }
     </tbody>
   </table>
 </div>

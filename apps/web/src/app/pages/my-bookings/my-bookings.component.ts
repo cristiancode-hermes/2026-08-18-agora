@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
@@ -21,7 +20,7 @@ import { NotificationService } from '../../core/services/notification.service';
 @Component({
   selector: 'app-my-bookings',
   standalone: true,
-  imports: [RouterLink, DatePipe, NavbarComponent, FooterComponent, StatusBadgeComponent, EmptyStateComponent, ToastComponent],
+  imports: [RouterLink, NavbarComponent, FooterComponent, StatusBadgeComponent, EmptyStateComponent],
   template: `<app-navbar />
 <div class="page-container">
   <h1>Mis eventos</h1>
@@ -31,7 +30,8 @@ import { NotificationService } from '../../core/services/notification.service';
     <button [class.active]="filter() === 'past'" (click)="filter.set('past')">Pasados ({{ pastCount() }})</button>
   </div>
   <div class="bookings-list">
-    <div class="booking-item" *ngFor="let booking of filteredBookings()">
+    @for (booking of filteredBookings(); track booking.id) {
+    <div class="booking-item">
       <div class="booking-status"><app-status-badge [status]="booking.status" /></div>
       <div class="booking-info">
         <h3>{{ booking.event?.title }}</h3>
@@ -40,13 +40,22 @@ import { NotificationService } from '../../core/services/notification.service';
         <p>🪑 {{ booking.spotsCount }} plaza(s)</p>
       </div>
       <div class="booking-actions">
-        <a [routerLink]="['/mis-eventos', booking.id, 'ticket']" class="btn-secondary" *ngIf="booking.status !== 'cancelled'">Ver ticket</a>
-        <button class="btn-danger" (click)="cancelBooking(booking)" *ngIf="booking.status === 'confirmed'">Cancelar</button>
-        <a [routerLink]="['/eventos', booking.eventId, 'review']" class="btn-secondary" *ngIf="booking.status === 'used' && !booking.hasReview">Dejar reseña</a>
+          @if (booking.status !== 'cancelled') {
+            <a [routerLink]="['/mis-eventos', booking.id, 'ticket']" class="btn-secondary">Ver ticket</a>
+          }
+          @if (booking.status === 'confirmed') {
+            <button class="btn-danger" (click)="cancelBooking(booking)">Cancelar</button>
+          }
+          @if (booking.status === 'used' && !booking.hasReview) {
+            <a [routerLink]="['/eventos', booking.eventId, 'review']" class="btn-secondary">Dejar reseña</a>
+          }
       </div>
     </div>
+    }
   </div>
-  <app-empty-state *ngIf="!loading() && filteredBookings().length === 0" message="Aún no tienes reservas. ¡Explora eventos!" icon="🎫" />
+  @if (!loading() && filteredBookings().length === 0) {
+  <app-empty-state message="Aún no tienes reservas. ¡Explora eventos!" icon="🎫" />
+  }
 </div>
 <app-footer />`
 })

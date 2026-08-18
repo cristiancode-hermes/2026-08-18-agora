@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -21,7 +22,7 @@ import { NotificationService } from '../../core/services/notification.service';
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe, NavbarComponent, FooterComponent, CategoryBadgeComponent, LoadingSkeletonComponent, ToastComponent],
+  imports: [CommonModule, FormsModule, RouterLink, DatePipe, NavbarComponent, FooterComponent, CategoryBadgeComponent, LoadingSkeletonComponent, ToastComponent],
   template: `<app-navbar />
 <div class="page-container" *ngIf="!loading() && event()">
   <a routerLink="/eventos" class="back-link">← Volver a eventos</a>
@@ -121,7 +122,7 @@ export default class EventDetailComponent implements OnInit {
   spotsAvailable = computed(() => {
     const e = this.event();
     if (!e) return 0;
-    return e.capacity - (e.spotsTaken || 0);
+    return e.spotsAvailable ?? (e.capacity - (e.spotsTaken || 0));
   });
   spotsColor = computed(() => {
     const n = this.spotsAvailable();
@@ -155,21 +156,72 @@ export default class EventDetailComponent implements OnInit {
   private notify = inject(NotificationService);
   
   ngOnInit() {
-    this.loadData();
+    this.loading.set(true);
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.loadEvent(id);
+        this.loadReviews(id);
+        this.checkUserBooking(id);
+      }
+    });
+  }
+
+  loadEvent(id: string) {
+    this.eventsService.getById(id).subscribe({
+      next: (res) => {
+        this.event.set(res.event);
+      },
+      error: (err) => {
+        this.error.set(err.error?.message || 'Error loading event');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  loadReviews(eventId: string) {
+    this.reviewsService.listByEvent(eventId).subscribe({
+      next: (res) => {
+        this.reviews.set(res.reviews);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+      },
+    });
+  }
+
+  checkUserBooking(eventId: string) {
+    if (!this.auth.isAuthenticated()) return;
+    this.bookingsService.mine().subscribe({
+      next: (res) => {
+        const booking = res.bookings.find(b => b.event?.id === eventId && b.status === 'confirmed');
+        if (booking) {
+          this.userBooking.set(booking);
+        }
+      },
+    });
   }
   
   async loadData() {
-    this.loading.set(true);
-    try {
-      // Override in specific page implementations
-    } catch (e: any) {
-      this.error.set(e.message || 'Error loading data');
-    } finally {
-      this.loading.set(false);
-    }
+    // Not used - loading happens in ngOnInit via loadEvent/loadReviews
   }
   
-  async bookEvent() {}
+  async bookEvent() {
+    const eventId = this.event()?.id;
+    if (!eventId) return;
+    this.booking.set(true);
+    try {
+      await this.bookingsService.create(eventId, this.quantity()).toPromise();
+      this.notify.show('¡Reserva confirmada!', 'success');
+      this.checkUserBooking(eventId);
+      this.loadEvent(eventId);
+    } catch (e: any) {
+      this.notify.show(e.error?.message || 'Error al reservar', 'error');
+    } finally {
+      this.booking.set(false);
+    }
+  }
   cancelBooking(b: any) {}
   incrementQty() { if (this.quantity() < 4) this.quantity.set(this.quantity() + 1); }
   decrementQty() { if (this.quantity() > 1) this.quantity.set(this.quantity() - 1); }

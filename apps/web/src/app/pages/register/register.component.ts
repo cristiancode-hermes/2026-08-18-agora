@@ -29,14 +29,14 @@ import { NotificationService } from '../../core/services/notification.service';
 
           <form (ngSubmit)="onSubmit()" class="auth-form">
             <div class="form-group">
-              <label class="form-label" for="name">Nombre completo</label>
+              <label class="form-label" for="username">Nombre de usuario</label>
               <input
-                id="name"
+                id="username"
                 class="form-input"
                 type="text"
-                [(ngModel)]="name"
-                name="name"
-                placeholder="Tu nombre"
+                [(ngModel)]="username"
+                name="username"
+                placeholder="Tu usuario"
                 autocomplete="off"
                 required
               />
@@ -197,7 +197,7 @@ export default class RegisterComponent {
   private router = inject(Router);
   private notify = inject(NotificationService);
 
-  name = '';
+  username = '';
   email = '';
   password = '';
   loading = signal(false);
@@ -207,7 +207,7 @@ export default class RegisterComponent {
     this.loading.set(true);
     this.error.set('');
 
-    this.auth.register(this.name, this.email, this.password).subscribe({
+    this.auth.register(this.username, this.email, this.password).subscribe({
       next: () => {
         this.loading.set(false);
         this.notify.success('Cuenta creada correctamente');

@@ -66,7 +66,7 @@ export class EventsService {
       .take(limit);
 
     const [data, total] = await qb.getManyAndCount();
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { events: data, total, page, pages: Math.ceil(total / limit) };
   }
 
   async findFeatured() {

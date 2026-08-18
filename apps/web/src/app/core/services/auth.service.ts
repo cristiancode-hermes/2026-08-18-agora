@@ -59,8 +59,8 @@ export class AuthService {
     );
   }
 
-  register(name: string, email: string, password: string) {
-    return this.http.post<{ user: User; token: string }>('/api/auth/register', { name, email, password }).pipe(
+  register(username: string, email: string, password: string) {
+    return this.http.post<{ user: User; token: string }>('/api/auth/register', { username, email, password }).pipe(
       tap((res) => {
         this.token.set(res.token);
         this.currentUser.set(res.user);

@@ -54,6 +54,10 @@ export class StatsService {
       totalRevenue: parseFloat(bookingStats?.totalRevenue || '0'),
       totalAttendees: parseInt(bookingStats?.totalAttendees || '0', 10),
       avgRating: parseFloat(reviewStats?.avgRating || '0') || 0,
+      avgOccupancy: events.length > 0
+        ? events.reduce((sum, e) => sum + (e.spotsTaken / e.capacity), 0) / events.length * 100
+        : 0,
+      events,
     };
   }
 
@@ -104,12 +108,27 @@ export class StatsService {
       .select('AVG(review.rating)', 'avgRating')
       .getRawOne();
 
+    const topEvents = await this.eventsRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.venue', 'venue')
+      .leftJoinAndSelect('event.category', 'category')
+      .orderBy('event.spotsTaken', 'DESC')
+      .limit(5)
+      .getMany();
+
+    const allEvents = await this.eventsRepository.find();
+    const globalOccupancy = allEvents.length > 0
+      ? allEvents.reduce((sum, e) => sum + (e.spotsTaken / e.capacity), 0) / allEvents.length * 100
+      : 0;
+
     return {
       totalUsers,
       totalEvents,
       totalBookings: parseInt(bookingStats?.totalBookings || '0', 10),
       totalRevenue: parseFloat(bookingStats?.totalRevenue || '0'),
       avgRating: parseFloat(reviewStats?.avgRating || '0') || 0,
+      globalOccupancy,
+      topEvents,
     };
   }
 
@@ -128,6 +147,6 @@ export class StatsService {
       .orderBy('date(booking.createdAt)', 'ASC')
       .getRawMany();
 
-    return result;
+    return { data: result };
   }
 }

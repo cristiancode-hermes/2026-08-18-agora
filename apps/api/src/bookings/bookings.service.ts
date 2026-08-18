@@ -45,10 +45,9 @@ export class BookingsService {
   async createBooking(eventId: number, userId: number, dto: CreateBookingDto) {
     const release = await this.mutex.acquire(`event-${eventId}`);
     try {
-      // BEGIN IMMEDIATE transaction pattern for SQLite
+      // Mutex already serializes writes for SQLite — no pessimistic lock needed
       const event = await this.eventsRepository
         .createQueryBuilder('event')
-        .setLock('pessimistic_write')
         .where('event.id = :eventId', { eventId })
         .getOne();
 
@@ -80,7 +79,7 @@ export class BookingsService {
         status: event.price === 0 ? 'confirmed' : 'pending',
       } as any);
 
-      const saved = await this.bookingsRepository.save(booking);
+      const saved = (await this.bookingsRepository.save(booking)) as any as Booking;
 
       // Update spotsTaken on event
       await this.eventsRepository
@@ -90,14 +89,24 @@ export class BookingsService {
         .where('id = :eventId', { eventId })
         .execute();
 
-      return saved;
+      return {
+        booking: saved,
+        ticket: {
+          id: saved.id,
+          qrToken: saved.qrToken,
+          status: saved.status,
+          spotsCount: saved.spotsCount,
+          totalPaid: saved.totalPaid,
+          expiresAt: saved.expiresAt,
+        },
+      };
     } finally {
       release();
     }
   }
 
   async getMyBookings(userId: number) {
-    return this.bookingsRepository
+    const bookings = await this.bookingsRepository
       .createQueryBuilder('booking')
       .leftJoinAndSelect('booking.event', 'event')
       .leftJoinAndSelect('event.category', 'category')
@@ -111,6 +120,7 @@ export class BookingsService {
       .where('booking.userId = :userId', { userId })
       .orderBy('booking.createdAt', 'DESC')
       .getMany();
+    return { bookings };
   }
 
   async getTicket(bookingId: number, userId: number) {
@@ -133,15 +143,17 @@ export class BookingsService {
     }
 
     return {
-      id: booking.id,
-      qrToken: booking.qrToken,
-      status: booking.status,
-      spotsCount: booking.spotsCount,
-      totalPaid: booking.totalPaid,
-      event: booking.event,
-      user: { id: booking.user.id, username: booking.user.username, email: booking.user.email },
-      venue: booking.event?.venue,
-      expiresAt: booking.expiresAt,
+      ticket: {
+        id: booking.id,
+        qrToken: booking.qrToken,
+        status: booking.status,
+        spotsCount: booking.spotsCount,
+        totalPaid: booking.totalPaid,
+        event: booking.event,
+        user: { id: booking.user.id, username: booking.user.username, email: booking.user.email },
+        venue: booking.event?.venue,
+        expiresAt: booking.expiresAt,
+      },
     };
   }
 

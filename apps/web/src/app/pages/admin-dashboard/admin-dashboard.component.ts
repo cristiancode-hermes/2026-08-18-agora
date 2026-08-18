@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -32,22 +31,28 @@ import { NotificationService } from '../../core/services/notification.service';
   </div>
   <div class="chart-section">
     <h2>Reservas por semana</h2>
-    <svg class="bar-chart" viewBox="0 0 800 200" *ngIf="chartData().length > 0">
-      <g *ngFor="let bar of chartData(); let i = index">
-        <rect [attr.x]="i * 60 + 10" [attr.y]="200 - bar.height" width="48" [attr.height]="bar.height" fill="var(--color-accent)" rx="3"/>
-        <text [attr.x]="i * 60 + 34" [attr.y]="200 - bar.height - 5" text-anchor="middle" font-size="10" fill="var(--color-muted)">{{ bar.count }}</text>
-        <text [attr.x]="i * 60 + 34" [attr.y]="195" text-anchor="middle" font-size="8" fill="var(--color-muted)">{{ bar.label }}</text>
-      </g>
+    @if (chartData().length > 0) {
+    <svg class="bar-chart" viewBox="0 0 800 200">
+      @for (bar of chartData(); track $index) {
+        <g>
+        <rect [attr.x]="$index * 60 + 10" [attr.y]="200 - bar.height" width="48" [attr.height]="bar.height" fill="var(--color-accent)" rx="3"/>
+        <text [attr.x]="$index * 60 + 34" [attr.y]="200 - bar.height - 5" text-anchor="middle" font-size="10" fill="var(--color-muted)">{{ bar.count }}</text>
+        <text [attr.x]="$index * 60 + 34" [attr.y]="195" text-anchor="middle" font-size="8" fill="var(--color-muted)">{{ bar.label }}</text>
+        </g>
+      }
     </svg>
+    }
   </div>
   <div class="top-events">
     <h2>Eventos más populares</h2>
-    <div class="event-rank" *ngFor="let ev of stats()?.topEvents; let i = index">
-      <span class="rank">#{{ i + 1 }}</span>
+    @for (ev of stats()?.topEvents; track $index) {
+    <div class="event-rank">
+      <span class="rank">#{{ $index + 1 }}</span>
       <span class="name">{{ ev.title }}</span>
       <span class="occupancy">{{ ev.spotsTaken }}/{{ ev.capacity }} ({{ ev.occupancy }}%)</span>
       <span class="revenue">€{{ ev.revenue }}</span>
     </div>
+    }
   </div>
 </div>
 <app-footer />`

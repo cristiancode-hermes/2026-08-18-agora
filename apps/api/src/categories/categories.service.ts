@@ -11,7 +11,8 @@ export class CategoriesService {
   ) {}
 
   async findAll() {
-    return this.categoriesRepository.find();
+    const categories = await this.categoriesRepository.find();
+    return { categories };
   }
 
   async findBySlug(slug: string) {

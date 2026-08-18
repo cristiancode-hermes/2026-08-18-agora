@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -28,15 +27,23 @@ import { NotificationService } from '../../core/services/notification.service';
   <table>
     <thead><tr><th>Usuario</th><th>Plazas</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody>
-      <tr *ngFor="let b of bookings()">
+      @for (b of bookings(); track b.id) {
+      <tr>
         <td>{{ b.user?.username }}</td>
         <td>{{ b.spotsCount }}</td>
         <td><app-status-badge [status]="b.status" /></td>
-        <td><button class="btn-sm" (click)="checkin(b)" *ngIf="b.status === 'confirmed'">Check-in</button></td>
+        <td>
+            @if (b.status === 'confirmed') {
+              <button class="btn-sm" (click)="checkin(b)">Check-in</button>
+            }
+          </td>
       </tr>
+      }
     </tbody>
   </table>
-  <app-empty-state *ngIf="bookings().length === 0" message="No hay reservas para este evento" icon="📋" />
+  @if (bookings().length === 0) {
+  <app-empty-state message="No hay reservas para este evento" icon="📋" />
+  }
 </div>
 <app-footer />`
 })

@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -32,26 +31,32 @@ import { NotificationService } from '../../core/services/notification.service';
   </div>
   <div class="chart-section">
     <h2>Reservas por día</h2>
-    <svg class="bar-chart" viewBox="0 0 800 200" *ngIf="chartData().length > 0">
-      <g *ngFor="let bar of chartData(); let i = index">
-        <rect [attr.x]="i * 30 + 10" [attr.y]="200 - bar.height" width="24" [attr.height]="bar.height" fill="var(--color-primary)" rx="3"/>
-        <text [attr.x]="i * 30 + 22" [attr.y]="200 - bar.height - 5" text-anchor="middle" font-size="10" fill="var(--color-muted)">{{ bar.count }}</text>
-        <text [attr.x]="i * 30 + 22" [attr.y]="195" text-anchor="middle" font-size="8" fill="var(--color-muted)">{{ bar.label }}</text>
-      </g>
+    @if (chartData().length > 0) {
+    <svg class="bar-chart" viewBox="0 0 800 200">
+      @for (bar of chartData(); track $index) {
+        <g>
+        <rect [attr.x]="$index * 30 + 10" [attr.y]="200 - bar.height" width="24" [attr.height]="bar.height" fill="var(--color-primary)" rx="3"/>
+        <text [attr.x]="$index * 30 + 22" [attr.y]="200 - bar.height - 5" text-anchor="middle" font-size="10" fill="var(--color-muted)">{{ bar.count }}</text>
+        <text [attr.x]="$index * 30 + 22" [attr.y]="195" text-anchor="middle" font-size="8" fill="var(--color-muted)">{{ bar.label }}</text>
+        </g>
+      }
     </svg>
+    }
   </div>
   <div class="events-table">
     <h2>Mis eventos</h2>
     <table>
       <thead><tr><th>Evento</th><th>Fecha</th><th>Plazas</th><th>Ingresos</th><th>Acciones</th></tr></thead>
       <tbody>
-        <tr *ngFor="let ev of stats()?.events">
+        @for (ev of stats()?.events; track ev.id) {
+        <tr>
           <td>{{ ev.title }}</td>
           <td>{{ ev.date }}</td>
           <td>{{ ev.spotsTaken }}/{{ ev.capacity }}</td>
           <td>€{{ ev.revenue }}</td>
           <td><a [routerLink]="['/organizador', ev.id, 'asistentes']" class="btn-sm">Gestionar</a></td>
         </tr>
+        }
       </tbody>
     </table>
   </div>

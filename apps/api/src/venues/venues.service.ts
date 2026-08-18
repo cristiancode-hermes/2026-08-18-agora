@@ -12,7 +12,8 @@ export class VenuesService {
   ) {}
 
   async findAll() {
-    return this.venuesRepository.find();
+    const venues = await this.venuesRepository.find();
+    return { venues };
   }
 
   async findOne(id: number) {

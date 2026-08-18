@@ -20,20 +20,24 @@ import { NotificationService } from '../../core/services/notification.service';
 @Component({
   selector: 'app-review-moderation',
   standalone: true,
-  imports: [NavbarComponent, FooterComponent, EmptyStateComponent, ToastComponent],
+  imports: [NavbarComponent, FooterComponent, EmptyStateComponent],
   template: `<app-navbar />
 <div class="page-container">
   <h1>Moderar reseñas</h1>
-  <div class="review-row" *ngFor="let review of reviews()">
-    <div class="review-info">
-      <span class="review-stars">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</span>
-      <span class="review-event">{{ review.event?.title }}</span>
-      <span class="review-author">{{ review.user?.username }}</span>
-      <p>{{ review.comment }}</p>
+  @for (review of reviews(); track review.id) {
+    <div class="review-row">
+      <div class="review-info">
+        <span class="review-stars">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</span>
+        <span class="review-event">{{ review.event?.title }}</span>
+        <span class="review-author">{{ review.user?.username }}</span>
+        <p>{{ review.comment }}</p>
+      </div>
+      <button class="btn-danger" (click)="deleteReview(review)">Eliminar</button>
     </div>
-    <button class="btn-danger" (click)="deleteReview(review)">Eliminar</button>
-  </div>
-  <app-empty-state *ngIf="reviews().length === 0" message="No hay reseñas para moderar" icon="📝" />
+  }
+  @if (reviews().length === 0) {
+    <app-empty-state message="No hay reseñas para moderar" icon="📝" />
+  }
 </div>
 <app-footer />`
 })
@@ -109,18 +113,24 @@ export default class ReviewModerationComponent implements OnInit {
   private notify = inject(NotificationService);
   
   ngOnInit() {
-    this.loadData();
+    this.loadAllReviews();
   }
   
   async loadData() {
+  }
+  
+  loadAllReviews() {
     this.loading.set(true);
-    try {
-      // Override in specific page implementations
-    } catch (e: any) {
-      this.error.set(e.message || 'Error loading data');
-    } finally {
-      this.loading.set(false);
-    }
+    this.reviewsService.listAll().subscribe({
+      next: (res) => {
+        this.reviews.set(res.reviews);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Error loading reviews');
+        this.loading.set(false);
+      },
+    });
   }
   
   async bookEvent() {}
@@ -131,5 +141,13 @@ export default class ReviewModerationComponent implements OnInit {
   async checkin(b: any) {}
   async toggleStatus(ev: any) {}
   async submitReview() {}
-  async deleteReview(r: any) {}
+  async deleteReview(r: any) {
+    try {
+      await this.reviewsService.delete(r.id).toPromise();
+      this.notify.show('Reseña eliminada', 'success');
+      this.loadAllReviews();
+    } catch (e: any) {
+      this.notify.show(e.error?.message || 'Error deleting review', 'error');
+    }
+  }
 }

@@ -1,5 +1,6 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { NgIf, NgFor } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -20,7 +21,7 @@ import { NotificationService } from '../../core/services/notification.service';
 @Component({
   selector: 'app-review-form',
   standalone: true,
-  imports: [FormsModule, RouterLink, NavbarComponent, FooterComponent, ToastComponent],
+  imports: [CommonModule, NgIf, NgFor, RouterLink, NavbarComponent, FooterComponent],
   template: `<app-navbar />
 <div class="page-container" *ngIf="event()">
   <a [routerLink]="['/eventos', event()!.id]" class="back-link">← Volver al evento</a>
@@ -28,7 +29,7 @@ import { NotificationService } from '../../core/services/notification.service';
   <h2>{{ event()!.title }}</h2>
   <div class="review-form">
     <div class="star-rating">
-      <button *ngFor="let star of [1,2,3,4,5]" (click)="rating.set(star)" [class.active]="star <= rating()">
+      <button *ngFor="let star of [1,2,3,4,5]; let i = index" (click)="rating.set(star)" [class.active]="star <= rating()">
         {{ star <= rating() ? '★' : '☆' }}
       </button>
     </div>
